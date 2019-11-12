@@ -9,4 +9,4 @@ This is a simple test classification problem. The methods we want to try is like
 
 First, we clean the data and implement word2vec on dataset.
 Second, we try three deep neural networks which are TextCNN, RNN, LSTM individually to get results.
-Third, with three results we may get, implement emmbeding on the results to get a higher score.
+Third, with three results we may get, implement ensembling on the results to get a higher score.
