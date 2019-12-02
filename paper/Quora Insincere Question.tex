@@ -30,6 +30,7 @@
 \setlength{\parindent}{2em}
 \usepackage{setspace}
 \usepackage {subcaption}
+\usepackage{float}
 %\usepackage{subfigure}
 
 \title{Quora Insincere Question Selection}
@@ -76,9 +77,7 @@
 
 \maketitle
 \begin{abstract}
-	In this Kaggle competition, we aim at finding out inappropriate comments from Quora website by building a binary classification model. We separate our whole work into three steps. First, we use word embedding method to map each text into corresponding data. Second, we tried three different models to train the model. The approaches we adopt to solve the problem are "GRU", "LSTM" and "LSTM" nested “LSTM”. Finally the evaluation will base on the F1-score between the predicted score and the target score. Owing to the incorrect labels in datasets, the highest score in this competition is about 0.71. Our results is around 0.68 on the premise of  the datasets’ accuracy.\\
-	(The results obtained in this research include ...)\\
-	(The impacts of our obtained results are ...)
+	In this Kaggle competition, we aim at finding out inappropriate comments from Quora website by building a binary classification model. We separate our whole work into three steps. First, we use word embedding method to map each text into corresponding data. Second, we tried three different models to train the model. The approaches we adopt to solve the problem are "GRU", "LSTM" and "LSTM" nested “LSTM”. Finally the evaluation will base on the F1-score between the predicted score and the target score. Owing to the incorrect labels in datasets, the highest score in this competition is about 0.71. Our results is around 0.68 on the premise of  the datasets’ accuracy. Since attention model is so hot and has a high performance in NLP, we can try to adopt that tech to this deal with this problem. With paying more attention on parts of text, we may get a higher score using attention model.\\
 \end{abstract}
 \setlength{\parskip}{0.3em}
 \section{Introduction}
@@ -94,7 +93,8 @@
 
 \noindent Base on the organizer's command, we need to build a classifier to find out insincere questions. Dealing with the relationship with language, RNN is the general model we first think  to build our model. So our approach is motivated by the success of RNN model in natural language processing field. Firstly, we  use LSTM model, which is an improvement model of RNN. The LSTM model can choose some parts from the past can be kept and others can be forgotten, not like the general RNN model, selecting the most recent information without filtering. Furthermore, we also introduce GRU to build our model. Compared to LSTM, the commonality is that two models both keep the important information. The difference is that GRU model has fewer parameters than LSTM model, so the training speed is faster than LSTM.\\
 
-\noindent In principle, our approach.....( more advance part...)
+\noindent In principle, by submitting results to kaggle, the highest score we got is 0.68421 and have a rank at 1055 among total 4037 groups , which is quite high at this point since the original dataset contains many wrong labels. At this time, the models we have are just simple LSTM, simple GRU and stack of LSTM and GRU. Attention will then be the next model we need to try in future work. The reason is that attention model will have the ability to focus on different parts of a text instead of putting more attention on useless words which may enhance the performance and increase accuracy.\\
+
 \section{ Data Pre-processing}
 \noindent The first and most important part of our project is data preprocessing.  We print the shape of training dataset and testing dataset on the first hand, the output shows that we have about 1306122 rows and 3 columns of data. The file train.csv has three columns: qid, question\_text, target. “Question\_text” column is composed of multiple sentences. “Target” column has binary values. “1” means that this sentence is identified as insincere. It will speed a lot of time running all the training dataset, so we choose to statistics the frequency of words and filter higher frequency of words to the next step.\\
 \begin{figure}[h]
@@ -131,8 +131,7 @@ enumerate the frequency of words in the first 5 rows.\\
 	\caption{Use KeyedVectors library to change words into one-dimensional vector}
 \end{figure}\\
 \noindent Next question appears in our mind, is that each word in the training dataset can be found according to the "wiki" dataset? So we check the coverage between vocabs in the training dataset's sentences and "wiki" dataset. Surprising find that there around 30.05\%\ percent of words from sentences in the training dataset also show in the "wiki" dataset. 87.66\%\ represent the total frequency of words from the training dataset, which also shows in the "wiki" dataset among the total number of words in the "wiki" dataset and training dataset. This result promote us to doing the next step.\\
-
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.15]{3.png}
 	\caption{Percentage and frequency}
@@ -152,31 +151,29 @@ enumerate the frequency of words in the first 5 rows.\\
 	\caption{Search for punctuations meet our requirement}
 \end{figure}\\
 \noindent The result is that we found two punctuations " \_\ " and "`" are not in the "wiki" dataset. What's more, we already aware that a word combined with a punctuation will be treated as a cannot find word. To fix this problem, we add spaces on both sides for punctations can be found in "wiki" dataset to separate the punctations and the word. Also, replace the other two cannot find punctuations with spaces.\\
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.15]{6.png}
 	\caption{Split and replace punctuations}
-\end{figure}\\
-
+\end{figure}
 \noindent Next step is how to deal with  “cannot find " words among the "wiki" dataset. So our group discuss two  methods to decrease the amount of the word in oov( “cannot find " words).  It is common that netizens often mistyped words or prefer abbreviations for convenience. Therefore, replacing Mistaken spelling words and abbreviated form with correct or appropriate words could increase the ratio of the total number of words in the "wiki" dataset . 
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.15]{mis.jpeg}
 	\caption{Mistaken spelling and abbrevited words}
-\end{figure}\\
+\end{figure}
 \noindent When we have ruled out the  possibility of mistyping, the length of “cannot find” words is still very high. How can we do?  Is it possible that replace the “unknown” words with words among “wiki” datasets? Based on this assumption, we start to try some special methods. We first sort the 1000 “cannot find”words with high frequencies, and then separately count how many times they appears in good\_sentence and bad\_sentence in terms of labels(0 or 1) in train and test datasets. The percentage of each word able to lead one sentence to be bad(means the corresponding label equals to 1) could generate through the equation r = bad\_sentence/(good\_sentence+bad\_sentence).\\
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.15]{insert.jpeg}
-	\caption{Mistaken spelling and abbrevited words}
-\end{figure}\\
+	\caption{Calculate bad ratio of words that cannot find from wiki dataset}
+\end{figure}
 \noindent At the same time, select 1000 sentences respectively from good\_sentence and bad\_sentence. And calculate the ratio of each word in these sentences. We set up the threshold less than 0.01 and more than 0.5 in order to get replaceable according to similar ratio values.  
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale = 0.13]{gb.jpeg}
-	\caption{Selection for good words and bad words}
+	\caption{Calculate bad ratio of the replaceable words from good and bad sentences}
 \end{figure}\\
-
 \noindent For example, we can see that the ratio of ‘bhakts’ ia about 0.8254, and the word ‘Marathis’ has similar value. As to this situation, it is theoretically feasible to replace ‘bhakts’ with ‘Marathis’. \\
 
 \noindent Therefore, our group implement several methods and then realize  the goal of reducing the length of the list (“cannot find” words). Now the length of the list changes from 81253 to 79883.
@@ -186,19 +183,17 @@ enumerate the frequency of words in the first 5 rows.\\
 the first and most popular model appears in our mind must be RNN model. As we read a sentence, we will not restart from the beginning of the sentence when we meet a new word. Our brain will comprehension from words we have already read and infer the meaning of new words. At this time, our own modules are inspired by Vanilla RNN, LSTM and GRU these three modules. Besides we also make stack and combination from three modules above.
 \subsection{Vanilla RNN}
 \noindent Recurrent neural networks is not a new topic in deep learning area. Many famous network company as Baidu, Google extensively use this technique with machine translation, speech recognition as well as a number of other tasks. Especially, almost all state of the art outcomes in NLP related tasks are achieved by exploiting RNNs. Before RNN, traditional neuron networks cannot contain persistance, it seems like a corrupt practices. But the occurane of RNN solve this problem.
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.15]{7.png}
 	\caption{Single recurrent neural network model}
-\end{figure}\\
-
+\end{figure}
 \noindent The recurrent neural networks model is in Fig.7 above. During each time period, each node receives information from the previous node and the process can be represented by a feedback cycle. Fig.8 shows the details of this "feedback" cycle.
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale = 0.2]{8.png}
 	\caption{How recurrent neural network work}
 \end{figure}\\
-
 \noindent In each time process, we pick an input " xi " and output of previous node's output "ai - 1". Calculate them and get the output of the current node " hi ". Same, the output "hi" also provided to the next node as it's input. The cycle will continue running until all time process finish.\\
 
 \subsection{LSTM}
@@ -209,20 +204,19 @@ the first and most popular model appears in our mind must be RNN model. As we re
 	\caption{RNN cannot get information with long period before}
 \end{figure}\\
 \noindent As a result LSTM networks came. LSTM is not a totally new module, it's a kind of evolution from RNN module. In order to keep and transfer information for a long period of time is the default behavior of these networks. Comparing with the structure, both LSTM and RNNs have a chain like shape. But the repeating module from two models are quite different. The original repeating module of RNNs only has a single tanh layer, but LSTM module contains four interacting layers.
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.15]{10.png}
 	\caption{RNNs module structure vs. LSTM module structure}
-\end{figure}\\
-
+\end{figure}
 \noindent The key point of LSTM is that it includes a "coveyor belt" within the module structure. Information will transfer on this "conveyor belt" and only few linear interaction can prevent the loss of information. There are three different gates collaborate together : "Foget", "Refresh" and "Output". \\
 \subsection{GRU}
 \noindent When we train the LSTM module, we find that although the result comes from LSTM is much better than vallina RNN module, but the time cost is also higher. In that case, we notice that LSTM module has a variant module "GRU".
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.15]{11.png}
 	\caption{GRU module}
-\end{figure}\\
+\end{figure}
 \noindent From Fig.11, it's obvious that inside of the GRU module, there are only two gates named "Refresh" and " Reset" instead of three gates in the LSTM module. The "Refresh" gate decides how much previous information we need to go through and the "Reset" gate decides how much former information the module should discard.\\
 
 \noindent In theoretical, because of the decrease of parameters in the GRU module, the computational efficiency of GRU will higher than LSTM. \\
@@ -244,43 +238,56 @@ the first and most popular model appears in our mind must be RNN model. As we re
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale = 0.2]{42.png}
-	\caption{Initialize training dataset with random vector}
+	\caption{One layer LSTM model}
 \end{figure}
 \noindent First model is just a simple one-layer LSTM model, after going through the LSTM layer, the output of that layer goes through two separate pooling layers in order to obtain information as much as possible. Then we concate the two outputs of the pooling layers and put it into an activation layer and then dropout followed by a linear layer.\\
 
 \noindent There’s only one hyperparameter we adjust in this project- number of epochs. In order to save time, we first tried 5, 7, 10 epochs to train our raw data without replacing misspelling words. The result is shown in Fig.20.\\
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.2]{421.png}
 	\caption{Different epochs with one-layer LSTM}
 \end{figure}
 \noindent Obviously, 7-epoch LSTM has the highest score. And this is the reason that we choose seven epochs to train our following models.
 With preprocessed data fed into model, we get the result shown below. And the average time training one epoch is at around 75s.
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.2]{4211.jpeg}
-	\caption{Different epochs with one-layer LSTM}
-\end{figure}\\
-\begin{figure}[h]
+	\caption{One-layer LSTM(7 epoch)
+	}
+\end{figure}
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.2]{4212.jpeg}
-	\caption{Different epochs with one-layer LSTM}
+	\caption{Part training result. Average training time consuming for one epoch is around 75 second
+	}
 \end{figure}
 \subsubsection{ Two and three layers LSTM}
 \noindent We also tried two -layer and three-layer LSTM models with seven epochs. With raw data, the two-layer LSTM got 0.63068 on final result which performs better than one-layer LSTM but the three-layer LSTM got 0.62601 which is worse than the two-layer LSTM model. The reason may be that three layers model is too much for the training data, the model got overfitting on the data.\\
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.2]{422.png}
-	\caption{Different epochs with one-layer LSTM}
-\end{figure}\\
+	\caption{Two-layer LSTM}
+\end{figure}
 \noindent After feeding preprocessed data to two-layer LSTM model, we got 0.68421 which is the highest score among all the LSTM models.\\
-	\begin{figure}[h]
+	\begin{figure}[H]
 		\centering
 		\includegraphics[scale = 0.2]{4221.jpeg}
-		\caption{Different epochs with one-layer LSTM}
-	\end{figure}\\
+		\caption{ Two-layer LSTM score }
+	\end{figure}
 \subsection{Simple GRU}
 \noindent Simply replacing nn.LSTM with nn.GRU give us one-layer GRU model. Compared to one-layer LSTM, we got a higher score(0.68206) and less training time(at around 44s).\\
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.2]{431.jpeg}
+	\caption{ One-layer GRU socre}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.2]{432.jpeg}
+	\caption{Part training result. Average training time consuming for one epoch is around 44 second}
+\end{figure}
+	
 \section*{Reference}
 \small
 
