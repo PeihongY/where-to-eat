@@ -77,7 +77,7 @@
 
 \maketitle
 \begin{abstract}
-	In this Kaggle competition, we aim at finding out inappropriate comments from Quora website by building a binary classification model. We separate our whole work into three steps. First, we use word embedding method to map each text into corresponding data. Second, we tried three different models to train the model. The approaches we adopt to solve the problem are "GRU", "LSTM" and "LSTM" nested “LSTM”. Finally the evaluation will base on the F1-score between the predicted score and the target score. Owing to the incorrect labels in datasets, the highest score in this competition is about 0.71. Our results is around 0.68 on the premise of  the datasets’ accuracy. Since attention model is so hot and has a high performance in NLP, we can try to adopt that tech to this deal with this problem. With paying more attention on parts of text, we may get a higher score using attention model.\\
+	In this Kaggle competition, we aim at finding out inappropriate comments from Quora website by building a binary classification model. We separate our whole work into three steps. First, we use word embedding method to map each text into corresponding data. Second, we tried three different models to train the model. The approaches we adopt to solve the problem are "GRU", "LSTM" and "Attention". Finally the evaluation will base on the F1-score between the predicted score and the target score. Owing to the incorrect labels in datasets, the highest score in this competition is about 0.71. Our results is around 0.68 on the premise of  the datasets’ accuracy. Since attention model is so hot and has a high performance in NLP, we can adopt that tech to this deal with this problem. With paying more attention on parts of text, we  got a higher score using attention model.\\
 \end{abstract}
 \setlength{\parskip}{0.3em}
 \section{Introduction}
@@ -93,7 +93,7 @@
 
 \noindent Base on the organizer's command, we need to build a classifier to find out insincere questions. Dealing with the relationship with language, RNN is the general model we first think  to build our model. So our approach is motivated by the success of RNN model in natural language processing field. Firstly, we  use LSTM model, which is an improvement model of RNN. The LSTM model can choose some parts from the past can be kept and others can be forgotten, not like the general RNN model, selecting the most recent information without filtering. Furthermore, we also introduce GRU to build our model. Compared to LSTM, the commonality is that two models both keep the important information. The difference is that GRU model has fewer parameters than LSTM model, so the training speed is faster than LSTM.\\
 
-\noindent In principle, by submitting results to kaggle, the highest score we got is 0.68421 and have a rank at 1055 among total 4037 groups , which is quite high at this point since the original dataset contains many wrong labels. At this time, the models we have are just simple LSTM, simple GRU and stack of LSTM and GRU. Attention will then be the next model we need to try in future work. The reason is that attention model will have the ability to focus on different parts of a text instead of putting more attention on useless words which may enhance the performance and increase accuracy.\\
+\noindent In principle, by submitting results to kaggle, the highest score we got is 0.68506 and have a rank at 1050 among total 4037 groups , which is quite high at this point since the original dataset contains many wrong labels. At this time, although we have LSTM, GRU and Attention modules,  hyperparameters are not the best, so we need to try more in the future. \\
 
 \section{ Data Pre-processing}
 \noindent The first and most important part of our project is data preprocessing.  We print the shape of training dataset and testing dataset on the first hand, the output shows that we have about 1306122 rows and 3 columns of data. The file train.csv has three columns: qid, question\_text, target. “Question\_text” column is composed of multiple sentences. “Target” column has binary values. “1” means that this sentence is identified as insincere. It will speed a lot of time running all the training dataset, so we choose to statistics the frequency of words and filter higher frequency of words to the next step.\\
@@ -188,7 +188,7 @@ the first and most popular model appears in our mind must be RNN model. As we re
 	\includegraphics[scale = 0.15]{7.png}
 	\caption{Single recurrent neural network model}
 \end{figure}
-\noindent The recurrent neural networks model is in Fig.7 above. During each time period, each node receives information from the previous node and the process can be represented by a feedback cycle. Fig.8 shows the details of this "feedback" cycle.
+\noindent The recurrent neural networks model is in Fig.13 above. During each time period, each node receives information from the previous node and the process can be represented by a feedback cycle. Fig.14 shows the details of this "feedback" cycle.
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale = 0.2]{8.png}
@@ -197,7 +197,7 @@ the first and most popular model appears in our mind must be RNN model. As we re
 \noindent In each time process, we pick an input " xi " and output of previous node's output "ai - 1". Calculate them and get the output of the current node " hi ". Same, the output "hi" also provided to the next node as it's input. The cycle will continue running until all time process finish.\\
 
 \subsection{LSTM}
-\noindent The defect of RNN is that with the growth of time period, it cannot get effect information from the time period a long time before. As shown in Fig.9, if we want to know more information with "t+1", we probably need to realize the meaning from "0" and "1" in the time process. Due to the long distance, the model learns from "0" and "1" cannot be expressed to the node with " t+1 ". As far as we can see, RNN can only memorize the short information sequence.
+\noindent The defect of RNN is that with the growth of time period, it cannot get effect information from the time period a long time before. If we want to know more information with "t+1", we probably need to realize the meaning from "0" and "1" in the time process. Due to the long distance, the model learns from "0" and "1" cannot be expressed to the node with " t+1 ". As far as we can see, RNN can only memorize the short information sequence.
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale = 0.15]{9.png}
@@ -217,9 +217,16 @@ the first and most popular model appears in our mind must be RNN model. As we re
 	\includegraphics[scale = 0.15]{11.png}
 	\caption{GRU module}
 \end{figure}
-\noindent From Fig.11, it's obvious that inside of the GRU module, there are only two gates named "Refresh" and " Reset" instead of three gates in the LSTM module. The "Refresh" gate decides how much previous information we need to go through and the "Reset" gate decides how much former information the module should discard.\\
+\noindent It's obvious that inside of the GRU module, there are only two gates named "Refresh" and " Reset" instead of three gates in the LSTM module. The "Refresh" gate decides how much previous information we need to go through and the "Reset" gate decides how much former information the module should discard.\\
 
 \noindent In theoretical, because of the decrease of parameters in the GRU module, the computational efficiency of GRU will higher than LSTM. \\
+\subsection{Attention}
+\noindent The traditional Attention Mechanism is also called Soft Attention, which the hidden status of the encoded code is obtained through the deterministic score calculation. Besides, Soft Attention is parameterized, so it can be derived and can be embedded in the model and trained directly. Gradients can be back-propagated to other parts of the model through the Attention Mechanism module.\\
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.15]{s1.png}
+	\caption{Soft Attention module}
+\end{figure}
 
 \section{ Implementation}
 \subsection{Embedding}
@@ -242,7 +249,7 @@ the first and most popular model appears in our mind must be RNN model. As we re
 \end{figure}
 \noindent First model is just a simple one-layer LSTM model, after going through the LSTM layer, the output of that layer goes through two separate pooling layers in order to obtain information as much as possible. Then we concate the two outputs of the pooling layers and put it into an activation layer and then dropout followed by a linear layer.\\
 
-\noindent There’s only one hyperparameter we adjust in this project- number of epochs. In order to save time, we first tried 5, 7, 10 epochs to train our raw data without replacing misspelling words. The result is shown in Fig.20.\\
+\noindent There’s only one hyperparameter we adjust in this project- number of epochs. In order to save time, we first tried 5, 7, 10 epochs to train our raw data without replacing misspelling words. The result is shown in Fig.21.\\
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale = 0.2]{421.png}
@@ -287,7 +294,20 @@ With preprocessed data fed into model, we get the result shown below. And the av
 	\includegraphics[scale = 0.2]{432.jpeg}
 	\caption{Part training result. Average training time consuming for one epoch is around 44 second}
 \end{figure}
-\subsection{}
+\subsection{Soft Attention}
+\noindent The structure of this soft attention model is shown below. The score we got is 0.68506 which is the highest score we have.\\
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.2]{442.jpeg}
+	\caption{Soft attention mode}
+\end{figure}
+\noindent In the fig above, we add two weights matrix at the attention step. In training data, not all words’ contributions are the same. The intuition to use attention model is to let model pay more attention on some ‘useful’ words instead of treat every word equally.\\
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale = 0.2]{441.png}
+	\caption{Soft attention model score}
+\end{figure}
+
 \section*{Reference}
 \small
 
